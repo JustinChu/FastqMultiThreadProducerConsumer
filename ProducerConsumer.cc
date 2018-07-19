@@ -2,14 +2,8 @@
  * Example program for efficient multithread producer-consumer I/O with kseq
  */
 
-#include <stdio.h>
-#include <iostream>
 #include <omp.h>
-#include <stdlib.h>
-#include <sched.h>
 #include "concurrentqueue.h"
-#include <string>
-#include <vector>
 #include <zlib.h>
 #ifndef KSEQ_INIT_NEW
 #define KSEQ_INIT_NEW
@@ -17,7 +11,6 @@
 KSEQ_INIT(gzFile, gzread)
 #endif /*KSEQ_INIT_NEW*/
 #include "kseq_util.h"
-#include "math.h"
 
 const static int threads = 64;
 const static size_t bulkSize = 256;
