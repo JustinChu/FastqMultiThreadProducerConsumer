@@ -40,16 +40,16 @@ void readLoadFinal(const char* filename) {
 			while (kseq_read(seq) >= 0) {
 				cpy_kseq(&readBuffer[size++], seq);
 				if (bulkSize == size) {
-
-					while (!workQueue.try_enqueue_bulk(ptok, readBuffer, size));
-
-//					//try to insert, if cannot queue is full (THIS DOES NOT WORK AS EXPECTED)
-//					if (!workQueue.try_enqueue_bulk(ptok, readBuffer, size)) {
-//						//join in to work since queue is full
-//						for (unsigned i = 0; i < size; ++i) {
-//							assert(readBuffer[i].seq.l); //work
-//						}
-//					}
+                    //try to insert, if cannot queue is full
+                    while (!workQueue.try_enqueue_bulk(ptok, readBuffer, size)) {
+                    	//try to work
+						if (kseq_read(seq) >= 0) {
+							assert(seq->seq.s); //work
+						}
+						else{
+							break;
+						}
+                    }
 					size = 0;
 				}
 			}
