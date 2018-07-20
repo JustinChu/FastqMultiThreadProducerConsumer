@@ -14,8 +14,10 @@ KSEQ_INIT(gzFile, gzread)
 
 const static int threads = 64;
 
-const static size_t bulkSize = 32; //still don't know the optimal size of this yet
-const static size_t maxQueueSize = threads * bulkSize; //still don't know the optimal size of this yet
+//still don't know the optimal size of this yet
+const static size_t bulkSize = 32;
+//still don't know the optimal size of this yet but must be greater than bulkSize
+const static size_t maxQueueSize = threads * bulkSize;
 
 void readLoadFinal(const char* filename) {
 	moodycamel::ConcurrentQueue<kseq_t> workQueue(maxQueueSize);
@@ -41,7 +43,9 @@ void readLoadFinal(const char* filename) {
                     while (!workQueue.try_enqueue_bulk(ptok, readBuffer, size)) {
                     	//try to work
 						if (kseq_read(seq) >= 0) {
+//------------------------WORK CODE START---------------------------------------
 							assert(seq->seq.s); //work
+//------------------------WORK CODE END-----------------------------------------
 						}
 						else{
 							break;
@@ -52,7 +56,9 @@ void readLoadFinal(const char* filename) {
 			}
 			//finish off remaining work
 			for (unsigned i = 0; i < size; ++i) {
+//------------------------WORK CODE START---------------------------------------
 				assert(readBuffer[i].seq.l); //work
+//------------------------WORK CODE END-----------------------------------------
 			}
 			if (workQueue.size_approx()) {
 				moodycamel::ConsumerToken ctok(workQueue);
@@ -62,7 +68,9 @@ void readLoadFinal(const char* filename) {
 							bulkSize);
 					if (num) {
 						for (unsigned i = 0; i < num; ++i) {
+//------------------------WORK CODE START---------------------------------------
 							assert(readBuffer[i].seq.l); //work
+//------------------------WORK CODE END-----------------------------------------
 						}
 					}
 				}
@@ -79,7 +87,9 @@ void readLoadFinal(const char* filename) {
 							bulkSize);
 					if (num) {
 						for (unsigned i = 0; i < num; ++i) {
+//------------------------WORK CODE START---------------------------------------
 							assert(readBuffer[i].seq.l); //work
+//------------------------WORK CODE END-----------------------------------------
 						}
 					}
 				}
