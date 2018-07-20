@@ -13,12 +13,9 @@ KSEQ_INIT(gzFile, gzread)
 #include "kseq_util.h"
 
 const static int threads = 64;
-const static size_t bulkSize = 256;
-/*
- * each kseq object varies in size but 100bp reads take 100-150 bytes
- * Expect maxQueueSize*150bytes of space to be used
- */
-const static size_t maxQueueSize = threads * bulkSize;
+
+const static size_t bulkSize = 32; //still don't know the optimal size of this yet
+const static size_t maxQueueSize = threads * bulkSize; //still don't know the optimal size of this yet
 
 void readLoadFinal(const char* filename) {
 	moodycamel::ConcurrentQueue<kseq_t> workQueue(maxQueueSize);
