@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-g -Wall -O2 -Wno-unused-function
+CFLAGS=-g -Wall -O3 -Wno-unused-function
 BINDIR=/usr/local/bin
 
 all:producerconsumer

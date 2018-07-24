@@ -5,6 +5,7 @@
 #include <omp.h>
 #include "concurrentqueue.h"
 #include <zlib.h>
+#include <vector>
 #ifndef KSEQ_INIT_NEW
 #define KSEQ_INIT_NEW
 #include "kseq.h"
@@ -22,10 +23,11 @@ const static size_t maxQueueSize = threads * bulkSize;
 void readLoadFinal(const char* filename) {
 	moodycamel::ConcurrentQueue<kseq_t> workQueue(maxQueueSize);
 	bool good = true;
+	typedef std::vector<kseq_t>::iterator iter_t;
 #pragma omp parallel
 	{
-		kseq_t readBuffer[bulkSize];
-		memset(&readBuffer, 0, sizeof(kseq_t) * bulkSize);
+		std::vector <kseq_t> readBuffer;
+		readBuffer.reserve(maxQueueSize);
 		if (omp_get_thread_num() == 0) {
 			//file reading init
 			gzFile fp;
@@ -37,11 +39,14 @@ void readLoadFinal(const char* filename) {
 
 			unsigned size = 0;
 			while (kseq_read(seq) >= 0) {
-				cpy_kseq(&readBuffer[size++], seq);
+				readBuffer.push_back(kseq_t()); // Don't like this, need to reallocate memory twice
+				cpy_kseq(&readBuffer[size++], seq); //TODO Make proper copy constructor for kseq?
 				if (bulkSize == size) {
-                    //try to insert, if cannot queue is full
-                    while (!workQueue.try_enqueue_bulk(ptok, readBuffer, size)) {
-                    	//try to work
+					//try to insert, if cannot queue is full
+					while (!workQueue.try_enqueue_bulk(ptok,
+							std::move_iterator < iter_t > (readBuffer.begin()),
+							size)) {
+						//try to work
 						if (kseq_read(seq) >= 0) {
 //------------------------WORK CODE START---------------------------------------
 							assert(seq->seq.s); //work
@@ -51,6 +56,8 @@ void readLoadFinal(const char* filename) {
 							break;
 						}
                     }
+					//reset buffer
+					readBuffer.clear();
 					size = 0;
 				}
 			}
@@ -64,7 +71,8 @@ void readLoadFinal(const char* filename) {
 				moodycamel::ConsumerToken ctok(workQueue);
 				//join in if others are still not finished
 				while (workQueue.size_approx()) {
-					size_t num = workQueue.try_dequeue_bulk(ctok, readBuffer,
+					size_t num = workQueue.try_dequeue_bulk(ctok,
+							std::move_iterator < iter_t > (readBuffer.begin()),
 							bulkSize);
 					if (num) {
 						for (unsigned i = 0; i < num; ++i) {
@@ -83,7 +91,8 @@ void readLoadFinal(const char* filename) {
 			moodycamel::ConsumerToken ctok(workQueue);
 			while (good) {
 				if (workQueue.size_approx() >= bulkSize) {
-					size_t num = workQueue.try_dequeue_bulk(ctok, readBuffer,
+					size_t num = workQueue.try_dequeue_bulk(ctok,
+							std::move_iterator < iter_t > (readBuffer.begin()),
 							bulkSize);
 					if (num) {
 						for (unsigned i = 0; i < num; ++i) {
