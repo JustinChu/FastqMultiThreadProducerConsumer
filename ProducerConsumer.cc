@@ -27,7 +27,7 @@ void readLoadFinal(const char* filename) {
 #pragma omp parallel
 	{
 		std::vector <kseq_t> readBuffer;
-		readBuffer.reserve(maxQueueSize);
+		readBuffer.reserve(bulkSize);
 		if (omp_get_thread_num() == 0) {
 			//file reading init
 			gzFile fp;
