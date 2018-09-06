@@ -35,4 +35,14 @@ static void cpy_kseq(kseq_t *dst, const kseq_t *src)
 	cpy_kstr(&dst->comment, &src->comment);
 }
 
+
+static void del_kseq(kseq_t &dst)
+{
+	free(dst.name.s);
+	free(dst.seq.s);
+	free(dst.qual.s);
+	free(dst.comment.s);
+}
+
+
 #endif /* KSEQ_UTIL_H_ */

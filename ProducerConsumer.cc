@@ -40,7 +40,7 @@ void readLoadFinal(const char* filename) {
 			unsigned size = 0;
 			while (kseq_read(seq) >= 0) {
 				readBuffer.push_back(kseq_t()); // Don't like this, need to reallocate memory twice
-				cpy_kseq(&readBuffer[size++], seq); //TODO Make proper copy constructor for kseq?
+				cpy_kseq(&readBuffer[size++], seq); //TODO Use memory pool?
 				if (bulkSize == size) {
 					//try to insert, if cannot queue is full
 					while (!workQueue.try_enqueue_bulk(ptok,
@@ -66,6 +66,7 @@ void readLoadFinal(const char* filename) {
 //------------------------WORK CODE START---------------------------------------
 				assert(readBuffer[i].seq.l); //work
 //------------------------WORK CODE END-----------------------------------------
+				del_kseq(readBuffer[i]); //TODO recycle into memory pool
 			}
 			if (workQueue.size_approx()) {
 				moodycamel::ConsumerToken ctok(workQueue);
@@ -79,6 +80,7 @@ void readLoadFinal(const char* filename) {
 //------------------------WORK CODE START---------------------------------------
 							assert(readBuffer[i].seq.l); //work
 //------------------------WORK CODE END-----------------------------------------
+							del_kseq(readBuffer[i]); //TODO recycle into memory pool
 						}
 					}
 				}
@@ -99,6 +101,7 @@ void readLoadFinal(const char* filename) {
 //------------------------WORK CODE START---------------------------------------
 							assert(readBuffer[i].seq.l); //work
 //------------------------WORK CODE END-----------------------------------------
+							del_kseq(readBuffer[i]); //TODO recycle into memory pool
 						}
 					}
 				}
