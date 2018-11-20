@@ -17,8 +17,6 @@ const static int s_threads = 64;
 
 //still don't know the optimal size of this yet
 const static size_t s_bulkSize = 32;
-//still don't know the optimal size of this yet but must be greater than bulkSize
-const static size_t s_maxQueueSize = s_threads * s_bulkSize;
 
 void readLoadFinal(const char* filename) {
 	unsigned numThreads = omp_get_num_threads();
@@ -27,8 +25,9 @@ void readLoadFinal(const char* filename) {
 		fp = gzopen(filename, "r");
 		kseq_t *seq = kseq_init(fp);
 		while (kseq_read(seq) >= 0) {
-			//WORK
-			assert(*seq);
+//------------------------WORK CODE START---------------------------------------
+			assert(seq->seq.s); //work
+//------------------------WORK CODE END-----------------------------------------
 		}
 	} else {
 		moodycamel::ConcurrentQueue<kseq_t> workQueue(numThreads * s_bulkSize);
@@ -77,8 +76,9 @@ void readLoadFinal(const char* filename) {
 								size)) {
 							//try to work
 							if (kseq_read(seq) >= 0) {
-								//WORK
-								assert(*seq);
+//------------------------WORK CODE START---------------------------------------
+								assert(seq->seq.s); //work
+//------------------------WORK CODE END-----------------------------------------
 							} else {
 								break;
 							}
@@ -90,8 +90,9 @@ void readLoadFinal(const char* filename) {
 						while (dequeueSize == 0) {
 							//try to work
 							if (kseq_read(seq) >= 0) {
-								//WORK
-								assert(*seq);
+//------------------------WORK CODE START---------------------------------------
+								assert(seq->seq.s); //work
+//------------------------WORK CODE END-----------------------------------------
 							} else {
 								break;
 							}
@@ -104,8 +105,9 @@ void readLoadFinal(const char* filename) {
 				}
 				//finish off remaining work
 				for (unsigned i = 0; i < size; ++i) {
-					//WORK
-					assert(readBuffer[i]);
+//------------------------WORK CODE START---------------------------------------
+					assert(readBuffer[i].seq.s); //work
+//------------------------WORK CODE END-----------------------------------------
 				}
 				assert(
 						recycleQueue.enqueue_bulk(rptok,
@@ -120,7 +122,9 @@ void readLoadFinal(const char* filename) {
 								s_bulkSize);
 						if (num) {
 							for (unsigned i = 0; i < num; ++i) {
-								assert(readBuffer[i]);
+//------------------------WORK CODE START---------------------------------------
+								assert(readBuffer[i].seq.s); //work
+//------------------------WORK CODE END-----------------------------------------
 							}
 							assert(
 									recycleQueue.enqueue_bulk(rptok,
@@ -142,9 +146,9 @@ void readLoadFinal(const char* filename) {
 								s_bulkSize);
 						if (num) {
 							for (unsigned i = 0; i < num; ++i) {
-								//------------------------WORK CODE START---------------------------------------
+//------------------------WORK CODE START---------------------------------------
 								assert(readBuffer[i]);
-								//------------------------WORK CODE END-----------------------------------------
+//------------------------WORK CODE END-----------------------------------------
 							}
 							assert(
 									recycleQueue.enqueue_bulk(rptok,
@@ -159,6 +163,6 @@ void readLoadFinal(const char* filename) {
 }
 
 int main(int argc, char **argv) {
-	omp_set_num_threads(threads);
+	omp_set_num_threads(s_threads);
 	readLoadFinal(argv[1]);
 }
