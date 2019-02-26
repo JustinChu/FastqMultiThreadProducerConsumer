@@ -37,7 +37,7 @@ void readLoadFinal(const char* filename) {
 		typedef std::vector<kseq_t>::iterator iter_t;
 		//fill recycleQueue with empty objects
 		{
-			std::vector<kseq_t> buffer(numThreads * s_bulkSize  * 2, kseq_t());
+			std::vector<kseq_t> buffer(numThreads * s_bulkSize * 2, kseq_t());
 			recycleQueue.enqueue_bulk(
 					std::move_iterator<iter_t>(buffer.begin()), buffer.size());
 		}
@@ -80,7 +80,7 @@ void readLoadFinal(const char* filename) {
 								assert(seq->seq.s); //work
 //------------------------WORK CODE END-----------------------------------------
 							} else {
-								break;
+								goto fileEmpty;
 							}
 						}
 						//reset buffer
@@ -94,7 +94,7 @@ void readLoadFinal(const char* filename) {
 								assert(seq->seq.s); //work
 //------------------------WORK CODE END-----------------------------------------
 							} else {
-								break;
+								goto fileEmpty;
 							}
 							dequeueSize = recycleQueue.try_dequeue_bulk(rctok,
 									std::move_iterator<iter_t>(
@@ -103,6 +103,7 @@ void readLoadFinal(const char* filename) {
 						size = 0;
 					}
 				}
+				fileEmpty:
 				//finish off remaining work
 				for (unsigned i = 0; i < size; ++i) {
 //------------------------WORK CODE START---------------------------------------
